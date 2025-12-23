@@ -23,6 +23,9 @@ builder.Services.AddSwaggerGen();
 builder.Services.AddDbContext<AppDbContext>(options => options.UseNpgsql(configuration.GetConnectionString("DefaultConnection")));
 
 var jwtSettings = configuration.GetSection("JwtSettings").Get<JwtSettings>();
+
+if (jwtSettings is null) throw new InvalidOperationException("JwtSettings configuration is missing");
+
 builder.Services.AddSingleton(jwtSettings);
 
 builder.Services.AddScoped<IJwtService, JwtService>();
@@ -30,8 +33,8 @@ builder.Services.AddScoped<IAuthenticationService, AuthenticationService>();
 
 builder.Services.AddAuthentication(options =>
 {
-   options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
-   options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme; 
+    options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+    options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
 }).AddJwtBearer(options =>
 {
     options.TokenValidationParameters = new TokenValidationParameters
@@ -52,7 +55,7 @@ builder.Services.AddAuthentication(options =>
         {
             if (context.Exception.GetType() == typeof(SecurityTokenExpiredException))
             {
-                context.Response.Headers.Add("Token-Expired", "true");
+                context.Response.Headers["Token-Expired"] = "true";
             }
 
             return Task.CompletedTask;
@@ -78,13 +81,13 @@ app.MapControllers();
 using (var scope = app.Services.CreateScope())
 {
     var dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-    
-    if (!dbContext.Users.Any())
-    {
-        var authService = scope.ServiceProvider.GetRequiredService<IAuthenticationService>();
-        await authService.RegisterAsync("Ivan", "Ivanov", "test@example.com", "qwerty123123");
-        Console.WriteLine("Test user created: test@example.com/ qwerty123123");
-    }
+
+    // if (!dbContext.Users.Any())
+    // {
+    //     var authService = scope.ServiceProvider.GetRequiredService<IAuthenticationService>();
+    //     await authService.RegisterAsync("Ivan", "Ivanov", "test@example.com", "qwerty123123");
+    //     Console.WriteLine("Test user created: test@example.com/ qwerty123123");
+    // }
 }
 
 app.Run();

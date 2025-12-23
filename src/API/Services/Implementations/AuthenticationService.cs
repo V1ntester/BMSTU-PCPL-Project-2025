@@ -41,11 +41,11 @@ namespace API.Services
             return user;
         }
 
-        public async Task<User> AuthenticateAsync(string email, string password)
+        public async Task<User?> AuthenticateAsync(string email, string password)
         {
             var user = await _context.Users.FirstOrDefaultAsync(u => u.Email == email);
 
-            if (user == null || !VerifyPassword(password, user.PasswordHash)) return null;
+            if (user is null || !VerifyPassword(password, user.PasswordHash)) return null;
 
             return user;
         }
@@ -81,7 +81,8 @@ namespace API.Services
 
             var storedRefreshToken = await _context.RefreshTokens.Include(rt => rt.User).FirstOrDefaultAsync(rt => rt.Token == refreshToken && rt.UserId == userId);
 
-            if (storedRefreshToken == null || storedRefreshToken.isExpired) throw new SecurityTokenException("Invalid refresh token");
+
+            if (storedRefreshToken is null || storedRefreshToken.User is null || storedRefreshToken.isExpired) throw new SecurityTokenException("Invalid refresh token");
 
             var newAccessToken = _jwtService.GenerateAccessToken(storedRefreshToken.User);
             var newRefreshToken = _jwtService.GenerateRefreshToken();

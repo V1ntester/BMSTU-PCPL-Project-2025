@@ -1,7 +1,9 @@
 namespace API.Models.Requests
 {
-    public class LoginRequest
+    public class RegisterRequest
     {
+        public required string Name { get; set; }
+        public required string Surname { get; set; }
         public required string Email { get; set; }
         public required string Password { get; set; }
     }

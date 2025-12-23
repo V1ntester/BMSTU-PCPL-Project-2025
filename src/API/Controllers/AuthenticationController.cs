@@ -18,14 +18,27 @@ namespace API.Controllers
             _authenticationService = authenticationService;
         }
 
-        //[HttpPost("register")]
+        [HttpPost("register")]
+        public async Task<IActionResult> Register([FromBody] RegisterRequest request)
+        {
+            try
+            {
+                var user = await _authenticationService.RegisterAsync(request.Name, request.Surname, request.Email, request.Password);
+                var tokens = await _authenticationService.GenerateTokensAsync(user);
+                return Ok(tokens);
+            }
+            catch (Exception exception)
+            {
+                return BadRequest(new { message = exception.Message });
+            }
+        }
 
         [HttpPost("login")]
         public async Task<IActionResult> Login([FromBody] LoginRequest request)
         {
             var user = await _authenticationService.AuthenticateAsync(request.Email, request.Password);
 
-            if (user == null) return Unauthorized(new { message = "Invalid credentials" });
+            if (user is null) return Unauthorized(new { message = "Invalid credentials" });
 
             var tokens = await _authenticationService.GenerateTokensAsync(user);
             return Ok(tokens);
@@ -37,7 +50,6 @@ namespace API.Controllers
             try
             {
                 var tokens = await _authenticationService.RefreshTokenAsync(request.AccessToken, request.RefreshToken);
-
                 return Ok(tokens);
             }
             catch (SecurityTokenException exception)
@@ -51,7 +63,7 @@ namespace API.Controllers
         public async Task<IActionResult> Revoke([FromBody] RevokeTokenRequest request)
         {
             await _authenticationService.RevokeRefreshTokenAsync(request.RefreshToken);
-            return Ok(new { message = "Token revoked"});
+            return Ok(new { message = "Token revoked" });
         }
     }
 }
