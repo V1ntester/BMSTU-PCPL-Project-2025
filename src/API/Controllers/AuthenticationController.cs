@@ -63,6 +63,7 @@ namespace API.Controllers
         public async Task<IActionResult> Revoke([FromBody] RevokeTokenRequest request)
         {
             await _authenticationService.RevokeRefreshTokenAsync(request.RefreshToken);
+
             return Ok(new { message = "Token revoked" });
         }
     }
